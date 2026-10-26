@@ -144,7 +144,7 @@ def main():
         lines = f.readlines()
 
     count = 0
-    for i, line in enumerate(lines):
+    for i, line in enumerate(lines[:5]):
         if not line.strip():
             continue
 

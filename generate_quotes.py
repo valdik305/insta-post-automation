@@ -6,7 +6,11 @@ from pollinations import Pollinations
 
 
 def generate_daily_quotes():
-    client = Pollinations()
+    # Передаем ключ для использования персонального шлюза
+    client = Pollinations(
+        api_key=os.getenv("POLLINATIONS_API_KEY"),
+        timeout=90  # Увеличиваем таймаут
+    )
 
     random_seed = random.randint(1000, 999999)
 
@@ -30,9 +34,11 @@ def generate_daily_quotes():
             )
 
             text = response.choices[0].message.content.strip()
+            if not text:
+                raise ValueError("ИИ вернул пустой ответ")
+
             text = text.replace("```text", "").replace("```", "").strip()
 
-            # Обработка строк и замена неизвестных авторов
             cleaned_lines = []
             for line in text.split('\n'):
                 if '|' in line:
@@ -49,7 +55,11 @@ def generate_daily_quotes():
                 elif line.strip():
                     cleaned_lines.append(line.strip())
 
-            final_text = "\n".join(cleaned_lines)
+            final_text = "\n".join(cleaned_lines[:5])
+
+            # ЖЕСТКАЯ ПРОВЕРКА: если текст пустой или в нем нет символа "|", кидаем ошибку
+            if not final_text.strip() or "|" not in final_text:
+                raise ValueError("ИИ вернул текст в неверном формате (нет разделителя |)")
 
             os.makedirs("data", exist_ok=True)
             file_path = "data/quotes.txt"
@@ -58,15 +68,15 @@ def generate_daily_quotes():
                 f.write(final_text + "\n")
 
             print(f"✅ Сгенерировано и сохранено в {file_path}:\n{final_text}\n")
-            return  # Если всё успешно, выходим из функции
+            return
 
         except Exception as e:
             print(f"⚠️ Попытка {attempt + 1} не удалась: {e}")
             if attempt < max_retries - 1:
-                print("Ждем 5 секунд и пробуем снова...\n")
-                time.sleep(5)  # Пауза перед следующей попыткой
+                print("Ждем 15 секунд и пробуем снова...\n")
+                time.sleep(15)
             else:
-                print("❌ Все попытки исчерпаны. Сервер Pollinations не отвечает.")
+                print("❌ Все попытки исчерпаны. Сервер Pollinations не отвечает или выдает ошибку.")
                 sys.exit(1)
 
 

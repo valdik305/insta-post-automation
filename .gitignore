@@ -4,6 +4,8 @@ session.json
 .idea
 logs/
 
+
+
 # Окружение Python
 .venv/
 __pycache__/
@@ -16,6 +18,12 @@ archive/
 # Сгенерированные файлы и мусор
 ready_img/
 
+# Системный мусор Mac
+.DS_Store
+
+# Локальные данные, которые генерируются скриптом
+data/bg_index.txt
+data/quotes.txt
 
 
 
