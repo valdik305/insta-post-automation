@@ -12,7 +12,7 @@ load_dotenv()
 # --- НАСТРОЙКИ (берутся из .env) ---
 IG_USERNAME = os.getenv("IG_USERNAME")
 IG_PASSWORD = os.getenv("IG_PASSWORD")
-CAPTION = os.getenv("CAPTION", "Размышления о психологии и жизни. Свайп 👉\n\n#психология #философия")
+CAPTION = os.getenv("CAPTION", "Размышления о психологии и жизни. Свайп 👉")
 SESSION_FILE = "session.json"
 
 # Проверка, что данные вообще загрузились

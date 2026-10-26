@@ -1,6 +1,5 @@
 
-from pollinations import Pollinations
-
+from pollinations import Pollinations  # type: ignore
 
 def generate_daily_quotes():
     client = Pollinations()
