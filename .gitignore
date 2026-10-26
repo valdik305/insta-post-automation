@@ -1,0 +1,22 @@
+# Секреты
+.env
+session.json
+.idea
+logs/
+
+# Окружение Python
+.venv/
+__pycache__/
+*.pyc
+
+# Сгенерированные файлы и мусор
+post_*.jpg
+temp_bg.jpg
+archive/
+# Сгенерированные файлы и мусор
+ready_img/
+
+
+
+
+
