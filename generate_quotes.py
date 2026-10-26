@@ -1,31 +1,73 @@
+import os
+import random
+import sys
+import time
+from pollinations import Pollinations
 
-from pollinations import Pollinations  # type: ignore
 
 def generate_daily_quotes():
     client = Pollinations()
+
+    random_seed = random.randint(1000, 999999)
+
     prompt = (
-        "Сгенерируй 5 коротких философских или психологических цитат на русском языке. "
+        f"Сгенерируй 5 коротких философских или психологических цитат на русском языке (итерация {random_seed}). "
         "Формат вывода строго такой, каждая с новой строки: Текст цитаты | АВТОР. "
-        "Без лишних слов, без нумерации. Автор может быть известным (Юнг, Сенека) или если автора нет ставим прочерк '_'."
+        "Обязательно указывай реальных известных авторов (например: Карл Юнг, Сенека, Фрейд, Ницше, Шопенгауэр). "
+        "Если цитата действительно безымянная (народная мудрость), то в качестве автора напиши просто длинный прочерк '—'. "
+        "Без лишних слов, без нумерации, без кавычек. Только текст в формате 'Цитата | Автор'."
     )
 
-    print("Запрос к ИИ для генерации новых цитат...")
-    response = client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="openai",
-        temperature=0.8
-    )
+    max_retries = 3
 
-    text = response.choices[0].message.content.strip()
+    for attempt in range(max_retries):
+        print(f"Запрос к ИИ для генерации новых цитат (попытка {attempt + 1} из {max_retries})...")
+        try:
+            response = client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="openai",
+                temperature=1.0
+            )
 
-    # Очищаем от возможных артефактов markdown
-    text = text.replace("```text", "").replace("```", "").strip()
+            text = response.choices[0].message.content.strip()
+            text = text.replace("```text", "").replace("```", "").strip()
 
-    file_path = "data/quotes.txt"  # <-- Изменено
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(text + "\n")
+            # Обработка строк и замена неизвестных авторов
+            cleaned_lines = []
+            for line in text.split('\n'):
+                if '|' in line:
+                    parts = line.split('|')
+                    quote = parts[0].strip()
+                    author = parts[1].strip() if len(parts) > 1 else ""
 
-    print(f"✅ Сгенерировано и сохранено в quotes.txt:\n{text}\n")
+                    unknown_authors = ["_", "-", "—", "НЕИЗВЕСТНЫЙ АВТОР", "Неизвестный автор", ""]
+
+                    if author in unknown_authors or author.lower() == "неизвестный автор":
+                        author = "—"
+
+                    cleaned_lines.append(f"{quote} | {author}")
+                elif line.strip():
+                    cleaned_lines.append(line.strip())
+
+            final_text = "\n".join(cleaned_lines)
+
+            os.makedirs("data", exist_ok=True)
+            file_path = "data/quotes.txt"
+
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(final_text + "\n")
+
+            print(f"✅ Сгенерировано и сохранено в {file_path}:\n{final_text}\n")
+            return  # Если всё успешно, выходим из функции
+
+        except Exception as e:
+            print(f"⚠️ Попытка {attempt + 1} не удалась: {e}")
+            if attempt < max_retries - 1:
+                print("Ждем 5 секунд и пробуем снова...\n")
+                time.sleep(5)  # Пауза перед следующей попыткой
+            else:
+                print("❌ Все попытки исчерпаны. Сервер Pollinations не отвечает.")
+                sys.exit(1)
 
 
 if __name__ == "__main__":
